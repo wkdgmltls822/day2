@@ -1,5 +1,8 @@
 // Vercel 서버리스 함수: API Key 는 환경변수(PIXABAY_API_KEY)에서만 읽는다.
 module.exports = async (req, res) => {
+  // 파일(file://)로 연 페이지에서도 호출할 수 있게 허용 (키는 응답에 포함되지 않음)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
   const key = process.env.PIXABAY_API_KEY;
   if (!key) {
     return res.status(500).json({ error: 'PIXABAY_API_KEY 환경변수가 설정되지 않았습니다.' });

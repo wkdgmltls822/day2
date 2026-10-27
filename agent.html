@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>제주 명물 에이전트</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: sans-serif;
+      background: #fff8ee;
+      color: #2b2b2b;
+    }
+    header {
+      padding: 1rem 16px;
+      background: linear-gradient(135deg, #ff9f1c, #ff6b35);
+      color: #fff;
+      text-align: center;
+    }
+    header h1 { margin: 0; font-size: 1.3rem; }
+    header p { margin: .2rem 0 0; font-size: .85rem; opacity: .95; }
+
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1rem 16px;
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+    }
+    .msg {
+      max-width: 78%;
+      padding: .6rem .9rem;
+      border-radius: 16px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg.me {
+      align-self: flex-end;
+      background: #ff9f1c;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.agent {
+      align-self: flex-start;
+      background: #fff;
+      border: 1px solid #f1e3cd;
+      border-bottom-left-radius: 4px;
+    }
+
+    form {
+      display: flex;
+      gap: .5rem;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: .6rem 16px;
+    }
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: .7rem .9rem;
+      border: 1px solid #f1e3cd;
+      border-radius: 999px;
+      font-size: 1rem;
+    }
+    input:focus { outline: 2px solid #ff9f1c; border-color: transparent; }
+    button {
+      padding: .7rem 1.3rem;
+      border: none;
+      border-radius: 999px;
+      background: #ff9f1c;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background: #e68a00; }
+
+    .note {
+      margin: 0;
+      padding: 0 16px .8rem;
+      font-size: .72rem;
+      color: #999;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🍊 제주 명물 에이전트</h1>
+    <p>제주도 명물에 대해 알려줘요</p>
+  </header>
+
+  <div id="chat" aria-live="polite"></div>
+
+  <form id="form">
+    <input id="input" type="text" placeholder="메시지를 입력하세요" autocomplete="off">
+    <button type="submit">보내기</button>
+  </form>
+  <p class="note">※ 지금 답변은 정해진 가짜 답이에요. 진짜 에이전트가 아니에요.</p>
+
+  <script>
+    const REPLIES = [
+      '안녕하세요, 정열 님! 저는 제주도 명물을 알려주는 에이전트예요 🍊 먹거리, 볼거리 중에 어떤 게 궁금하세요?',
+      '그럼 한라봉을 추천해요! 겨울~봄에 달콤하고 향긋한 제주 대표 과일이에요 🟠',
+      '아직 공부 중이에요! 5일차에 진짜로 알아볼게요.'
+    ];
+    let turn = 0;
+
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+
+    function addMessage(text, who) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + who;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      addMessage(text, 'me');
+      input.value = '';
+
+      const reply = REPLIES[turn % REPLIES.length];
+      turn++;
+      setTimeout(() => addMessage(reply, 'agent'), 1000);
+    });
+
+    input.focus();
+  </script>
+</body>
+</html>

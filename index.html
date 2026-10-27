@@ -163,6 +163,24 @@
     .pager { display: flex; justify-content: space-between; align-items: center; }
     #page { font-size: .9rem; color: #666; }
     .hint { margin: .8rem 0 0; font-size: .8rem; color: #888; text-align: center; }
+
+    /* 에이전트 채팅 (agent.html) */
+    #chatFab {
+      position: fixed; right: 20px; bottom: 20px; z-index: 1000;
+      padding: .8rem 1.3rem; border: none; border-radius: 999px;
+      background: #1f7a5c; color: #fff; font-size: 1rem; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
+    }
+    #chatFab:hover { background: #17604a; }
+    #chatPanel {
+      position: fixed; right: 20px; bottom: 80px; z-index: 1000;
+      width: 380px; max-width: calc(100vw - 32px);
+      height: 560px; max-height: calc(100vh - 100px);
+      border-radius: 16px; overflow: hidden; background: #fff;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
+    }
+    #chatPanel[hidden] { display: none; }
+    #chatPanel iframe { width: 100%; height: 100%; border: 0; display: block; }
   </style>
 </head>
 <body>
@@ -308,6 +326,28 @@
     <p>© 2026 Jeju Specialties · 제주의 맛과 멋을 전합니다</p>
   </footer>
 
+  <button id="chatFab" type="button" aria-expanded="false" aria-controls="chatPanel">💬 에이전트와 대화</button>
+  <div id="chatPanel" hidden></div>
+
+  <script>
+    // 버튼을 누르면 agent.html(채팅 화면)을 불러와 열고, 다시 누르면 닫는다.
+    (function () {
+      const fab = document.getElementById('chatFab');
+      const panel = document.getElementById('chatPanel');
+      fab.addEventListener('click', () => {
+        if (!panel.firstChild) {
+          const frame = document.createElement('iframe');
+          frame.src = 'agent.html';
+          frame.title = '제주 명물 에이전트';
+          panel.appendChild(frame);
+        }
+        panel.hidden = !panel.hidden;
+        fab.setAttribute('aria-expanded', String(!panel.hidden));
+        fab.textContent = panel.hidden ? '💬 에이전트와 대화' : '✕ 닫기';
+      });
+    })();
+  </script>
+
   <script>
     const $ = (id) => document.getElementById(id);
     const qInput = $('q'), statusEl = $('status');
@@ -315,6 +355,8 @@
     const prevBtn = $('prev'), nextBtn = $('next');
     const prevPage = $('prevPage'), nextPage = $('nextPage'), pageEl = $('page');
     const PER_PAGE = 10;
+    // 파일로 직접 열 때 쓸 Vercel 배포 주소. 예: 'https://내프로젝트.vercel.app' (끝에 / 없이)
+    const API_BASE = 'https://day2-ak-cbb3.vercel.app';
     let hits = [], index = 0, page = 1, total = 0, query = '';
 
     function setStatus(msg, isError) {
@@ -327,7 +369,13 @@
       // API Key 는 서버(/api/pixabay)가 환경변수에서 읽어 사용합니다.
       setStatus('불러오는 중...');
       try {
-        const res = await fetch('/api/pixabay?' + new URLSearchParams({ q, page: p }));
+        // 키는 화면에 나오지 않고 서버(Vercel 환경변수)에만 있다.
+        // 파일로 직접 연 경우에는 배포된 서버 주소(API_BASE)로 요청한다.
+        const base = location.protocol === 'file:' ? API_BASE : '';
+        if (location.protocol === 'file:' && !base) {
+          return setStatus('파일로 열었어요. 아래 API_BASE 에 Vercel 배포 주소를 넣거나, 배포 주소에서 열어 주세요.', true);
+        }
+        const res = await fetch(base + '/api/pixabay?' + new URLSearchParams({ q, page: p }));
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(res.status === 429 ? '요청이 너무 많아요. 잠시 후 다시 시도하세요.' : (data.error || 'API 오류 (' + res.status + ')'));
         if (!data.hits.length) {
@@ -338,7 +386,10 @@
         render();
         setStatus('"' + q + '" 검색 결과 ' + total + '개');
       } catch (err) {
-        setStatus(err.message, true);
+        const isNetwork = err instanceof TypeError;
+        setStatus(isNetwork
+          ? '서버(/api/pixabay)에 연결할 수 없어요. 파일로 직접 열지 말고 Vercel 배포 주소에서 열어 주세요.'
+          : err.message, true);
       }
     }
 
